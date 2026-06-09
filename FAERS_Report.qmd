@@ -1,0 +1,456 @@
+---
+title: "Exploring Potential Drug Safety Signals Using the FDA Adverse Event Reporting System (FAERS)"
+format: html
+execute:
+  warning: false
+---
+
+## Introduction
+
+### Background
+
+The FDA Adverse Event Reporting System (FAERS) is a publicly available pharmacovigilance database maintained by the United States Food and Drug Administration (FDA). The database contains spontaneous reports of adverse drug events submitted by healthcare professionals, pharmaceutical manufacturers and consumers.
+
+The primary purpose of FAERS is post-marketing drug safety surveillance. While clinical trials provide important information regarding the efficacy and safety of medications, they are often limited by sample size, study duration, and strict inclusion criteria. Rare adverse events or long-term safety concerns may therefore only become apparent after a medication has been widely used in the general population.
+
+Pharmacovigilance aims to detect potential safety signals that may warrant further investigation. A safety signal is information suggesting a possible association between a medication and an adverse event that occurs more frequently than expected. Identifying such signals can assist researchers and regulatory agencies in prioritising further studies and monitoring activities.
+
+However, FAERS data must be interpreted carefully. The database is based on spontaneous reporting and is therefore subject to substantial reporting bias, incomplete information, duplicate reports, and confounding factors. Consequently, findings generated from FAERS analyses should be viewed as hypothesis-generating rather than evidence of causality.
+
+### Objective
+
+The objective of this study was to investigate whether publicly available FAERS data could be used to identify potential drug safety signals through descriptive analysis and disproportionality analysis using Reporting Odds Ratios (RORs).
+
+Specific objectives included:
+
+- Cleaning and integrating multiple FAERS datasets using R.
+- Identifying commonly reported adverse events.
+- Exploring associations between selected adverse events and medications.
+- Calculating Reporting Odds Ratios (RORs) for selected drug-event combinations.
+- Demonstrating a reproducible pharmacovigilance workflow using publicly available healthcare data.
+
+## Methods
+
+```{r echo=FALSE}
+library(tidyverse)
+library(pvda)
+```
+
+### Data Source
+
+Data were obtained from the FDA Adverse Event Reporting System (FAERS) Quarterly Data Extract Files for the third quarter of 2025.
+
+Three datasets were used:
+
+- DEMO (Patient Demographics)
+- DRUG (Drug Information)
+- REAC (Adverse Reactions)
+
+The datasets were imported into R using the tidyverse package.
+
+```{r echo=FALSE}
+reac <- read_delim(
+  "data/REAC25Q3.txt",
+  delim = "$",
+  col_names = TRUE,
+  trim_ws = TRUE
+)
+
+### Data Cleaning ###
+
+#Remove unwanted columns
+reac <- reac %>%
+  select(-drug_rec_act)
+
+#Remove duplicates
+reac <- reac %>% distinct()
+
+#Fix type
+reac <- reac %>%
+  mutate(across(c(primaryid, caseid), as.character))
+```
+
+```{r echo=FALSE}
+drug <- read_delim(
+  "data/DRUG25Q3.txt",
+  delim = "$",
+  col_names = TRUE,
+  trim_ws = TRUE
+)
+
+### Data Cleaning ###
+
+#Remove unnecessary columns
+drug <- drug %>% 
+  select(primaryid, drugname, prod_ai, role_cod)
+
+#Remove duplicates
+drug <- drug %>% distinct()
+
+drug <- drug %>%
+  mutate(primaryid = as.character(primaryid))
+```
+
+```{r echo=FALSE}
+### Load DEMO file ###
+demo <- read_delim(
+  "data/DEMO25Q3.txt",
+  delim = "$",
+  col_names = TRUE,
+  trim_ws = TRUE
+)
+
+### Data cleaning ###
+
+demo <- demo %>%
+  select(primaryid, age, sex, event_dt, occr_country)
+
+demo <- demo %>% filter(age <= 120 | is.na(age))
+
+demo <- demo %>% distinct()
+
+demo <- demo %>% mutate(
+  primaryid = as.character(primaryid),
+  sex = as.factor(sex),
+  event_dt = ymd(event_dt),
+  occr_country = as.factor(occr_country)
+)
+```
+
+### Data Cleaning
+
+Several preprocessing steps were performed to improve data quality and consistency.
+
+#### **Missing Values**
+
+Columns containing large numbers of missing values and not relevant to the study objectives were removed. Records missing essential information required for analysis were excluded where appropriate.
+
+#### **Data Type Standardisation**
+
+Variables such as primaryid and caseid were converted from numeric to character format because they function as identifiers rather than numerical measurements.
+
+Date variables were converted to date format using the lubridate package.
+
+Categorical variables such as sex were converted to factors.
+
+#### **Duplicate Removal**
+
+Duplicate records were removed using the distinct() function.
+
+#### **Outlier Assessment**
+
+Implausible values resulting from likely data entry errors were identified and removed. For example, records containing biologically impossible age values were excluded.
+
+### Handling Follow-Up Reports
+
+FAERS may contain multiple versions of the same case report.
+
+The primaryid represents an individual report version, while the caseid identifies the underlying case. To minimise duplicate reporting, only the most recent report associated with each case was retained prior to analysis.
+
+### Data Integration
+
+The DEMO dataset was used as the primary reference table.
+
+The DRUG dataset was first joined to DEMO using primaryid, followed by integration with the REAC dataset.
+
+To focus on medications most likely to be associated with reported adverse events, only records classified as Primary Suspect drugs were retained. Secondary suspect and concomitant medications were excluded.
+
+Following dataset integration, duplicate records were reassessed and removed where appropriate.
+
+```{r echo=FALSE}
+drug <- drug %>%
+  filter(role_cod == "PS") %>%
+  select(-role_cod)
+
+demo_drug <- demo %>%
+  left_join(drug, by = "primaryid")
+
+combined <- demo_drug %>%
+  left_join(reac, by = "primaryid")
+
+combined_clean <- combined %>%
+  distinct(age, sex, event_dt, occr_country, drugname, prod_ai, pt, .keep_all = TRUE)
+```
+
+### Descriptive Analysis
+
+The frequency of adverse events was calculated using MedDRA Preferred Terms (PTs).
+
+The ten most frequently reported adverse events were identified and visualised using ggplot2.
+
+Terms representing medication use issues rather than adverse clinical outcomes were excluded from selected analyses, including:
+
+- Off-label use
+- Drug ineffective
+- Product dose omission issue
+
+Additional exploratory analyses examined medications most frequently associated with selected adverse events.
+
+### Reporting Odds Ratio (ROR)
+
+To investigate whether selected adverse events were reported disproportionately for specific medications, Reporting Odds Ratios (RORs) were calculated.
+
+The ROR compares the odds of reporting a particular adverse event for a target drug against the odds of reporting the same event for all other drugs in the database.
+
+A two-by-two contingency table was constructed:
+
+|             |               |              |
+|-------------|---------------|--------------|
+|             | Adverse Event | Other Events |
+| Target Drug | A             | B            |
+| Other Drugs | C             | D            |
+
+The Reporting Odds Ratio was calculated as:
+
+ROR = (A × D) / (B × C)
+
+The pvda package was used to calculate ROR values and corresponding 95% confidence intervals.
+
+An ROR greater than 1 suggests disproportionate reporting of the adverse event for the target medication, whereas an ROR less than 1 suggests lower reporting relative to other medications.
+
+## Results
+
+### Dataset Overview
+
+After data cleaning and preprocessing:
+
+- Number of demographic records analysed: **`r nrow(demo)`**
+
+- Number of drug records analysed: **`r nrow(drug)`**
+
+- Number of adverse event records analysed: **`r nrow(reac)`**
+
+- Final number of rows of the joined data: **`r nrow(combined_clean)`**
+
+### Most Frequently Reported Adverse Events
+
+The ten most frequently reported adverse events are shown in Figure 1.
+
+```{r echo=FALSE}
+combined_clean <- combined_clean %>% 
+  filter(!pt %in% c("Off label use", "Drug ineffective", "Product dose omission issue"))
+
+top10 <- combined_clean %>%
+  distinct(primaryid, pt) %>% #Good to have
+  count(pt, sort = TRUE) %>%
+  slice_head(n = 10)
+
+ggplot(top10, aes(x = reorder(pt, n), y = n)) +
+  geom_col() +
+  coord_flip() +
+  labs(
+    title = "Top 10 Most Commonly Reported Adverse Effects",
+    x = "Adverse Effect (Preferred Term)",
+    y = "Count"
+  )
+```
+
+Figure 1. Top 10 most frequently reported adverse events.
+
+The most frequently reported adverse events included:
+
+- **`r top10 %>% slice(1) %>% pull(pt)`**
+- **`r top10 %>% slice(2) %>% pull(pt)`**
+- **`r top10 %>% slice(3) %>% pull(pt)`**
+
+Several highly ranked terms represented medication use issues rather than adverse clinical outcomes and were removed from subsequent analyses.
+
+### Analysis of Fatigue Reports
+
+Fatigue was selected for further investigation due to its high reporting frequency.
+
+The medications most commonly associated with fatigue reports are shown in Figure 2.
+
+```{r echo=FALSE}
+
+
+fatigue_top10_drug <- combined_clean %>%
+  filter(pt == "Fatigue") %>%
+  count(prod_ai, sort = TRUE) %>%
+  slice_head(n = 10)
+
+ggplot(fatigue_top10_drug, aes(x = reorder(prod_ai, n), y = n)) +
+  geom_col() +
+  coord_flip() +
+  labs(
+    title = "Top 10 reported drugs that causes fatigue"
+  )
+```
+
+Figure 2. Top medications associated with reports of fatigue.
+
+The most frequently reported medications associated with fatigue were:
+
+- **`r fatigue_top10_drug %>% slice(1) %>% pull(prod_ai)`**
+- **`r fatigue_top10_drug %>% slice(2) %>% pull(prod_ai)`**
+- **`r fatigue_top10_drug %>% slice(3) %>% pull(prod_ai)`**
+
+```{r echo=FALSE}
+fatigue_top <- fatigue_top10_drug %>% slice(1) %>% pull(prod_ai)
+```
+
+### Reporting Odds Ratio for `r fatigue_top` and Fatigue
+
+`r fatigue_top` was selected for disproportionality analysis because it appeared frequently among fatigue reports.
+
+The calculated Reporting Odds Ratio was:
+
+```{r echo=FALSE}
+
+#a = Dupilumab + Fatigue
+a <- combined_clean %>%
+  filter(
+    prod_ai == fatigue_top,
+    pt == "Fatigue"
+  ) %>%
+  summarise(n = n_distinct(primaryid)) %>% pull(n)
+
+#b = Dupilumab + NOT Fatigue
+b <- combined_clean %>%
+  filter(
+    prod_ai == fatigue_top,
+    pt != "Fatigue"
+  ) %>%
+  summarise(n = n_distinct(primaryid)) %>% pull(n)
+
+#c = Other drugs + Fatigue
+c <- combined_clean %>%
+  filter(
+    prod_ai != fatigue_top,
+    pt == "Fatigue"
+  ) %>%
+  summarise(n = n_distinct(primaryid)) %>% pull(n)
+
+#d = Other drugs + NOT Fatigue
+d <- combined_clean %>%
+  filter(
+    prod_ai != fatigue_top,
+    pt != "Fatigue"
+  ) %>%
+  summarise(n = n_distinct(primaryid)) %>% pull(n)
+
+ror <- ror(a, b, c, d)
+```
+
+- ROR: **`r round(ror$ror, 2)`**
+
+- 95% CI: **`r round(ror$ror2.5, 2)` to `r round(ror$ror97.5, 2)`**
+
+The ROR was below 1, indicating that fatigue was reported proportionally less frequently for `r fatigue_top` compared with other medications in the dataset.
+
+### Analysis of Death Reports
+
+Death was selected as a clinically significant adverse event for further investigation.
+
+The medications most frequently associated with death reports are shown in Figure 3.
+
+```{r echo=FALSE}
+death_top10_drug <- combined_clean %>%
+  filter(pt == "Death") %>%
+  count(prod_ai, sort = TRUE) %>%
+  slice_head(n = 10)
+
+ggplot(death_top10_drug, aes(x = reorder(prod_ai, n), y = n)) +
+  geom_col() +
+  coord_flip() +
+  labs(
+    title = "Top 10 reported drugs that cause Death"
+  )
+```
+
+Figure 3. Top medications associated with reports of death.
+
+```{r echo=FALSE}
+death_top <- death_top10_drug %>% slice(1) %>% pull(prod_ai)
+```
+
+The medication with the greatest number of death reports was: **`r death_top`**
+
+However, interpretation of raw report counts is limited because frequently prescribed medications naturally generate larger numbers of adverse event reports.
+
+### Reporting Odds Ratio for `r death_top` and Death
+
+`r death_top` was selected for further investigation due to the large number of death reports identified.
+
+The calculated Reporting Odds Ratio was:
+
+```{r echo=FALSE}
+
+#a = Drug + Death
+a2 <- combined_clean %>%
+  filter(
+    prod_ai == death_top,
+    pt == "Death"
+  ) %>%
+  summarise(n = n_distinct(primaryid)) %>% pull(n)
+
+#b = Drug + NOT Death
+b2 <- combined_clean %>%
+  filter(
+    prod_ai == death_top,
+    pt != "Death"
+  ) %>%
+  summarise(n = n_distinct(primaryid)) %>% pull(n)
+
+#c = Other drugs + Death
+c2 <- combined_clean %>%
+  filter(
+    prod_ai != death_top,
+    pt == "Death"
+  ) %>%
+  summarise(n = n_distinct(primaryid)) %>% pull(n)
+
+#d = Other drugs + NOT death
+d2 <- combined_clean %>%
+  filter(
+    prod_ai != death_top,
+    pt != "Death"
+  ) %>%
+  summarise(n = n_distinct(primaryid)) %>% pull(n)
+
+ror2 <- ror(a2, b2, c2, d2)
+```
+
+- ROR: **`r round(ror2$ror, 2)`**
+
+- 95% CI: **`r round(ror2$ror2.5, 2)` to `r round(ror2$ror97.5, 2)`**
+
+The ROR was substantially greater than 1, indicating disproportionate reporting of death among reports involving dapagliflozin relative to other medications in the database.
+
+## Discussion
+
+This study demonstrates how publicly available FAERS data can be used to explore potential drug safety signals through a combination of descriptive analysis and disproportionality analysis.
+
+Several adverse events were frequently reported within the dataset, including fatigue and death. Further investigation using Reporting Odds Ratios demonstrated that raw report counts alone can be misleading and that disproportionality measures provide additional context when evaluating potential safety signals.
+
+The analysis also highlights the importance of clinical interpretation. For example, a large number of death reports associated with a medication does not necessarily imply that the medication caused those deaths. Patients receiving certain medications may already have severe underlying illnesses that increase baseline mortality risk.
+
+Therefore, observed safety signals should be interpreted as indicators for further investigation rather than evidence of causality.
+
+## Limitations
+
+Several limitations should be considered.
+
+1.  FAERS is a spontaneous reporting system and is subject to substantial reporting bias.
+
+2.  Reports may contain incomplete, inaccurate, or duplicated information.
+
+3.  The database does not provide reliable incidence rates because the total number of exposed patients is unknown.
+
+4.  Confounding variables such as age, comorbidities, disease severity, and concomitant medications were not adjusted for in the current analysis.
+
+5.  The ROR calculations presented were unadjusted disproportionality analyses and should not be interpreted as estimates of causal risk.
+
+Future work could incorporate multivariable logistic regression models to calculate adjusted reporting odds ratios and account for potential confounding factors.
+
+## Conclusion
+
+This study demonstrates a reproducible workflow for analysing FAERS data using R.
+
+Through data cleaning, integration, visualisation, and Reporting Odds Ratio analysis, several potential safety signals were explored. The findings illustrate both the value and limitations of spontaneous reporting databases for pharmacovigilance research.
+
+While disproportionality analyses can highlight unusual reporting patterns, further epidemiological and clinical investigation is required before conclusions regarding causality can be made.
+
+## References
+
+1.  FDA Adverse Event Reporting System (FAERS) Quarterly Data Extract Files. U.S. Food and Drug Administration. Available at: <https://fis.fda.gov/extensions/FPD-QDE-FAERS/FPD-QDE-FAERS.html>

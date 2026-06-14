@@ -6,6 +6,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
+<meta name="author" content="Reina Kaino">
 
 <title>Exploring Potential Drug Safety Signals Using the FDA Adverse Event Reporting System (FAERS)</title>
 <style>
@@ -36,15 +37,49 @@ ul.task-list li input[type="checkbox"] {
 <link href="FAERS_Report_files/libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="FAERS_Report_files/libs/bootstrap/bootstrap.min.js"></script>
 <link href="FAERS_Report_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="FAERS_Report_files/libs/bootstrap/bootstrap-efbb37e9afcc02144ebbc7afd12a776f.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="FAERS_Report_files/libs/bootstrap/bootstrap-a56826f2bab9e7f220a59ef70d6a3ebd.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 
 
 </head>
 
-<body class="fullcontent quarto-light">
+<body class="quarto-light">
 
 <div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
-
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction">Introduction</a>
+  <ul class="collapse">
+  <li><a href="#background" id="toc-background" class="nav-link" data-scroll-target="#background">Background</a></li>
+  <li><a href="#objective" id="toc-objective" class="nav-link" data-scroll-target="#objective">Objective</a></li>
+  </ul></li>
+  <li><a href="#methods" id="toc-methods" class="nav-link" data-scroll-target="#methods">Methods</a>
+  <ul class="collapse">
+  <li><a href="#data-source" id="toc-data-source" class="nav-link" data-scroll-target="#data-source">Data Source</a></li>
+  <li><a href="#data-cleaning" id="toc-data-cleaning" class="nav-link" data-scroll-target="#data-cleaning">Data Cleaning</a></li>
+  <li><a href="#handling-follow-up-reports" id="toc-handling-follow-up-reports" class="nav-link" data-scroll-target="#handling-follow-up-reports">Handling Follow-Up Reports</a></li>
+  <li><a href="#data-integration" id="toc-data-integration" class="nav-link" data-scroll-target="#data-integration">Data Integration</a></li>
+  <li><a href="#descriptive-analysis" id="toc-descriptive-analysis" class="nav-link" data-scroll-target="#descriptive-analysis">Descriptive Analysis</a></li>
+  <li><a href="#reporting-odds-ratio-ror" id="toc-reporting-odds-ratio-ror" class="nav-link" data-scroll-target="#reporting-odds-ratio-ror">Reporting Odds Ratio (ROR)</a></li>
+  </ul></li>
+  <li><a href="#results" id="toc-results" class="nav-link" data-scroll-target="#results">Results</a>
+  <ul class="collapse">
+  <li><a href="#dataset-overview" id="toc-dataset-overview" class="nav-link" data-scroll-target="#dataset-overview">Dataset Overview</a></li>
+  <li><a href="#most-frequently-reported-adverse-events" id="toc-most-frequently-reported-adverse-events" class="nav-link" data-scroll-target="#most-frequently-reported-adverse-events">Most Frequently Reported Adverse Events</a></li>
+  <li><a href="#analysis-of-fatigue-reports" id="toc-analysis-of-fatigue-reports" class="nav-link" data-scroll-target="#analysis-of-fatigue-reports">Analysis of Fatigue Reports</a></li>
+  <li><a href="#reporting-odds-ratio-for-dupilumab-and-fatigue" id="toc-reporting-odds-ratio-for-dupilumab-and-fatigue" class="nav-link" data-scroll-target="#reporting-odds-ratio-for-dupilumab-and-fatigue">Reporting Odds Ratio for DUPILUMAB and Fatigue</a></li>
+  <li><a href="#analysis-of-death-reports" id="toc-analysis-of-death-reports" class="nav-link" data-scroll-target="#analysis-of-death-reports">Analysis of Death Reports</a></li>
+  <li><a href="#reporting-odds-ratio-for-dapagliflozin-and-death" id="toc-reporting-odds-ratio-for-dapagliflozin-and-death" class="nav-link" data-scroll-target="#reporting-odds-ratio-for-dapagliflozin-and-death">Reporting Odds Ratio for DAPAGLIFLOZIN and Death</a></li>
+  </ul></li>
+  <li><a href="#discussion" id="toc-discussion" class="nav-link" data-scroll-target="#discussion">Discussion</a></li>
+  <li><a href="#limitations" id="toc-limitations" class="nav-link" data-scroll-target="#limitations">Limitations</a></li>
+  <li><a href="#conclusion" id="toc-conclusion" class="nav-link" data-scroll-target="#conclusion">Conclusion</a></li>
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
+  </ul>
+</nav>
+</div>
 <main class="content" id="quarto-document-content">
 
 <header id="title-block-header" class="quarto-title-block default">
@@ -56,6 +91,12 @@ ul.task-list li input[type="checkbox"] {
 
 <div class="quarto-title-meta">
 
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Reina Kaino </p>
+          </div>
+  </div>
     
   
     
@@ -303,6 +344,18 @@ ul.task-list li input[type="checkbox"] {
 
 </main>
 <!-- /main column -->
+&nbsp;
+<hr>
+
+<p style="text-align: center;">A work by <a href="https://reijkg2904.github.io/portfolio/">Reina Kaino</a></p>
+
+<p style="text-align: center;"><span style="color: #808080;"><em>reinasdatastudio@gmail.com</em></span></p>
+
+<p style="text-align: center;"><span style="color: #808080;"><em>@reinas_data.studio</em></span></p>
+
+
+
+&nbsp;
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
     const icon = "";

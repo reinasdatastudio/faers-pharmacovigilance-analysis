@@ -1,6 +1,15 @@
 ---
 title: "Exploring Potential Drug Safety Signals Using the FDA Adverse Event Reporting System (FAERS)"
-format: html
+author: "Reina Kaino"
+format:
+  html:
+    theme: lux
+    page-layout: article
+    toc: true
+    toc-depth: 3
+    code-fold: true
+    include-after-body: footer.html
+
 execute:
   warning: false
 ---

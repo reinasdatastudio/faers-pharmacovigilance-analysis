@@ -282,7 +282,7 @@ ggplot(fatigue_top10_drug, aes(x = reorder(prod_ai, n), y = n)) +
   geom_col() +
   coord_flip() +
   labs(
-    title = "Top 10 reported drugs that causes fatigue"
+    title = "Top 10 Drugs Associated with Fatigue Report"
   )
 ```
 
@@ -363,7 +363,7 @@ ggplot(death_top10_drug, aes(x = reorder(prod_ai, n), y = n)) +
   geom_col() +
   coord_flip() +
   labs(
-    title = "Top 10 reported drugs that cause Death"
+    title = "Top 10 Drugs Associated with Death Reports"
   )
 ```
 

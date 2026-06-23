@@ -52,9 +52,10 @@ FDA Adverse Event Reporting System (FAERS)
 
 Reina Kaino
 
-## Portfolio
+Former Pharmacist | Data Scientist | System Engineer
 
-🌐 https://reinasdatastudio.github.io/webpage/
+**Website**
+https://reinasdatastudio.github.io/webpage/
 
 &ensp;
 
@@ -109,8 +110,8 @@ Reina Kaino
 
 戒能 伶奈
 
+元薬剤師｜データサイエンティスト
 R・医療データ解析・再現可能な解析ワークフローに興味があります。
 
-## ポートフォリオ
-
-🌐 https://reinasdatastudio.github.io/webpage/
+**Website**
+https://reinasdatastudio.github.io/webpage/

@@ -1,5 +1,10 @@
 # FAERS Pharmacovigilance Analysis
 
+![R](https://img.shields.io/badge/R-276DC3?logo=r&logoColor=white)
+![Quarto](https://img.shields.io/badge/Quarto-39729E?logo=quarto&logoColor=white)
+![Healthcare](https://img.shields.io/badge/Healthcare-009688)
+![Reproducible Workflow](https://img.shields.io/badge/Reproducible-Workflow-success)
+
 Data files are not included.
 Download the relevant quarterly files from the FDA website and place them in the data folder before rendering the report.
 

@@ -111,6 +111,7 @@ https://reinasdatastudio.github.io/webpage/
 戒能 伶奈
 
 元薬剤師｜データサイエンティスト
+
 R・医療データ解析・再現可能な解析ワークフローに興味があります。
 
 **Website**
